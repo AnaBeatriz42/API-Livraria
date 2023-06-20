@@ -1,0 +1,145 @@
+
+Node.js: API Rest com Express e MongoDB
+
+API Para uma livraria:
+
+Apresentado os conceitos iniciais para a APIS REST (Anotado no caderno)
+
+------------------------------------------------------------------------
+
+Criando o servidor:
+
+const http = require('http')
+const port = 3000;
+
+const server = http.createServer((req, res) => {
+      res.writeHead(200,{'Content-Type':'text/plain'})
+      res.end('API - Livraria')
+})
+
+
+server.listen(port,() => {
+     console.log(`Servidor rodando na porta 3000`)
+})
+
+
+Curiosidades e detalhes do que é cada chave do package.json:
+
+amos entender e detalhar alguns desses atributos:
+
+	name: é onde você define o nome pelo qual seu módulo será chamado;
+	version: cada vez que uma atualização do módulo é lançada é atribuído um conjunto de 3 números. os módulos trabalham com três níveis de versionamento seguindo um padrão chamado SemVer (Semantic Versioning), ou seja, versionamento semântico, onde 3 números separados por ponto correspondem, respectivamente, aos atributos Major, Minor e Patch. Patch está relacionado a uma alteração que não quebra uma funcionalidade anterior e nem adiciona novas. Geralmente é usado para liberar alguma correção de bug. Minor é quando adicionamos uma nova funcionalidade, sem quebrar funcionalidades anteriores. Major é quando pode ocorrer uma quebra de compatibilidade. Por isso, é importante indicar a versão de forma adequada. Você pode ler mais sobre versionamento semântico aqui;
+	description: define o que será este módulo. Ideal que seja uma descrição curta e clara sobre o objetivo principal;
+	main: define o ponto de entrada da aplicação;
+	scripts: essa sessão tem alguns scripts pré-definidos, mas você também pode definir os seus personalizados. Nesse link é possível ter acesso a algumas informações sobre os mesmos;
+	keywords: é um array de palavras-chave sobre o projeto;
+	author: são dados de autoria, pode conter nome, e-mail e site;
+	license: é a licença escolhida para o projeto;
+	dependencies: define a lista de pacotes necessários para executar seu projeto num ambiente de produção;
+	devDependencies: define a lista de pacotes necessários para executar o projeto num ambiente de desenvolvimento e testes.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+Comandos uteis do npm:
+
+install	i	Instala um novo módulo
+list	ls	Lista os módulos instalados
+test	t	Executa o script de teste especificado no package.json
+--global	-g	Usado como um sinalizador para instalar um pacote globalmente (não só na pasta do projeto
+--save	-S	Salva o módulo ao instalar
+--save-exact	-E	Salva o módulo ao instalar, porém na versão exata mencionada
+--save-dev	-D	Salva o módulo ao instalar, porém como uma dependência de desenvolvimento
+
+npm home	Abre a página do projeto
+npm repo	Abre o repositório de código do projeto
+npm audit	Executa uma auditoria no projeto para identificar se existe alguma dependência com vulnerabilidade conhecida
+npm update	Atualiza projetos para a última versão respeitando o package.json
+npm outdated	Retorna a lista de dependências desatualizadas mostrando a versão mais recente
+npm adduser	Adiciona um novo usuario no https://registry.npmjs.org para permitir a publicação de pacotes
+npm publish	Faz a publicação do pacote no NPM
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CONECTANDO AO BANCO DE DADOS:
+
+CONCEITO: banco relacional x NoSql
+
+
+Banco relaciona: 
+	- Utiliza tabelas, linhas e colunas
+	- Seus relacionamentos se dão por chaves primarias e esrtrangeiras 
+ Exemplo: mysql, postgresql, sql server 
+
+SQL: structured query language - linguagem de consulta estruturada 
+
+
+Banco NoSql:
+	- Os dados não precisam ser divididos em tableas 
+	- Todos os dados podem estar armazenados numa mesma estrutura  
+	- Utilizado bastante paga bigdata
+	- possuem varios tipos de armazenamento como: documentos, chave-valor: como oraclenosql, infinitdb, grafos: nelforgey, colunas amplas: casandra ou hbase.
+
+  Além do formato JSON (JavaScript Object Notation), o MongoDB, que é um banco de dados orientado a documentos, utiliza também documentos no formato BSON (Binary JSON) para armazenar dados. https://cursos.alura.com.br/extra/alura-mais/json-bson-entendendo-os-documentos-do-mongodb-c84
+
+  Para a versão de conexão local o mongodb sempre vai manter o mesmo padrão de conexão na porta: 27017
+
+
+conectando o projeto ao banco de dados:
+criamos previamente o arquivo dbConnect.js 
+ 
+e em app.js add:
+
+import db from "./config/dbConnect.js"
+
+//db.on = metodo de inicialização com tratamento de erro
+db.on("error", console.log.bind(console,"Erro de conexão"))
+
+/*A função console.log.bind() é uma forma de criar uma nova função vinculada (bound) ao objeto console.log. 
+Quando você usa o método bind em uma função, você está criando uma nova função que terá o mesmo código da função original, mas com o valor do this vinculado a um objeto específico. */
+
+//db.once = abre a conexão
+db.once("open", () => {
+      console.log("Conexão com o banco feita com sucesso ")
+})
+
+
+-Um pouco mais sobre os metodos on e once:
+Os métodos on e once são comumente utilizados em conexões com bancos de dados, especialmente em bibliotecas e frameworks que implementam o padrão Event Emitter.
+
+Esses métodos são responsáveis por registrar um evento e associar uma função de retorno (callback) a esse evento específico. Quando o evento ocorre, a função de retorno é executada.
+
+-------------------------------------------------------------------------------------------------
+Aprimorando a api aplicando a estrutura MVC 
+
+ add models, views, e controles 
+
+add tb routes: para esse projeto vamos add dentro de controles algumas class onde definiremos varios metodos  e em routes a associação desses metodos a um path.
+
+vejo o exemplo:
+controladores de livros : nele possui os metodos associados a livros
+
+import livros from "../models/Livro.js"
+
+class LivroControler {
+     static listarLivros = (req, res) => {
+          livros.find((err, livros) =>{
+               res.status(200).json(livros)
+          })
+     }
+
+}
+
+export default LivroControler;
+
+routes de livros: nele se associa os metodos aos path pelo roteador do express
+
+import express from "express"
+import LivroControler from "../controllers/livrosControllers.js"
+
+const router = express.Router();
+
+router
+     .get("/livros", LivroControler.listarLivros)
+
+
+
+
